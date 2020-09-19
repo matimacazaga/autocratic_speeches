@@ -26,35 +26,33 @@ lapply(packages_required, library, character.only = TRUE)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # load data
-data <- readRDS("../data/topic_preprocessing/preprocessed_monthly.rds")
-data_corpus <- readRDS("../data/topic_preparation/prep_monthly.rds") # data containing raw tweets (before preprocessing)
+data <- readRDS("../data/df_preprocessed.rds")
 
 # ----------------------------------------------------------------------------------------------
 # ---------------------------------------- Hyperparameter Search -------------------------------
 # ----------------------------------------------------------------------------------------------
 
 # specify model for use of searchK function
-covar <- "Partei+ Bundesland + s(t, df = 5) + s(Struktur_4, df = 5) + 
-  s(Struktur_22, df = 5) + s(Struktur_42, df = 5) + s(Struktur_54, df = 5)"
-content_var <- "Partei"
+covar <- "Name + s(t, df = 5)"
+# content_var <- "Partei" # could create a gender variable here
 outcome <- ""
 prevalence <- as.formula(paste(outcome, covar, sep = "~")) 
 
-# # search hyperparameter space for optimal K using searchK function
-# hyperparameter_search <- stm::searchK(
-#   documents = data$documents,
-#   vocab = data$vocab,
-#   data = data$meta,
-#   K = c(5,10,15,20,25,30,35,40),
-#   prevalence = prevalence,
-#   heldout.seed = 123,
-#   max.em.its = 200,
-#   init.type = "Spectral"
-# )
-# saveRDS(hyperparameter_search, "../data/4/searchK_data.rds")
+# search hyperparameter space for optimal K using searchK function
+hyperparameter_search <- stm::searchK(
+  documents = data$documents,
+  vocab = data$vocab,
+  data = data$meta,
+  K = c(5,10,15,20,25,30,35,40),
+  prevalence = prevalence,
+  heldout.seed = 123,
+  max.em.its = 200,
+  init.type = "Spectral"
+)
+saveRDS(hyperparameter_search, "../data/searchK_data.rds")
 
 # load searchK results
-searchK_data <- readRDS("../data/4/searchK_data.rds")
+searchK_data <- readRDS("../data/searchK_data.rds")
 
 # plot four metrics used for hyperparameter search 
 plot_heldout <- ggplot(data = searchK_data$results, aes(x = K, y = heldout)) +
